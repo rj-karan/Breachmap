@@ -1,0 +1,710 @@
+{
+  "fixture": "v1-oidc",
+  "decisions": [
+    {
+      "id": "d01",
+      "description": "Tinder case: trust checks only aud, so a token from any repository matches",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:attacker/evil:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-aud-only",
+      "outcome": "allow",
+      "cites": "GitHub docs: 'the aud claim is sts.amazonaws.com by default for every token', so a condition on aud alone does not restrict which repository may assume the role"
+    },
+    {
+      "id": "d02",
+      "description": "sub-scoped trust rejects a token from another repository",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:attacker/evil:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-scoped",
+      "outcome": "deny",
+      "reason": "condition_mismatch",
+      "cites": "StringEquals: 'Exact matching, case sensitive'"
+    },
+    {
+      "id": "d03",
+      "description": "sub-scoped trust accepts the exact repo and branch",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:acme/app:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-scoped",
+      "outcome": "allow"
+    },
+    {
+      "id": "d04",
+      "description": "sub for a pull_request event differs from the main-branch sub",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:acme/app:pull_request",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-scoped",
+      "outcome": "deny",
+      "reason": "condition_mismatch",
+      "cites": "GitHub docs: for pull_request events the sub is 'repo:<org>/<repo>:pull_request'"
+    },
+    {
+      "id": "d05",
+      "description": "StringLike repo:acme/* admits every repo in the org",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:acme/website:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-org-wildcard",
+      "outcome": "allow",
+      "cites": "StringLike: 'Case-sensitive matching. The values can include multi-character match wildcards (*)'"
+    },
+    {
+      "id": "d06",
+      "description": "StringLike repo:acme/* rejects other owners",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:attacker/evil:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-org-wildcard",
+      "outcome": "deny",
+      "reason": "condition_mismatch"
+    },
+    {
+      "id": "d07",
+      "description": "environment-scoped trust accepts the environment sub",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:acme/app:environment:prod",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-prod-env",
+      "outcome": "allow",
+      "cites": "GitHub docs: when a job references an environment the sub is 'repo:<org>/<repo>:environment:<name>'"
+    },
+    {
+      "id": "d08",
+      "description": "environment-scoped trust rejects the branch sub",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:acme/app:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-prod-env",
+      "outcome": "deny",
+      "reason": "condition_mismatch"
+    },
+    {
+      "id": "d09",
+      "description": "identity policy allows GetObject on the crown-jewel bucket",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/deploy-aud-only"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "allow"
+    },
+    {
+      "id": "d10",
+      "description": "SCP denies GetSecretValue for every principal except secrets-reader",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/deploy-scp-blocked"
+      },
+      "action": "secretsmanager:GetSecretValue",
+      "resource": "arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf",
+      "outcome": "deny",
+      "reason": "scp",
+      "cites": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html 'If an SCP denies the action, the request is denied, even if identity-based policies allow it'"
+    },
+    {
+      "id": "d11",
+      "description": "secrets-reader is the one principal the SCP lets through",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/secrets-reader"
+      },
+      "action": "secretsmanager:GetSecretValue",
+      "resource": "arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf",
+      "outcome": "allow"
+    },
+    {
+      "id": "d12",
+      "description": "boundary allows s3:GetObject and so does the identity policy",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/deploy-boundary"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "allow"
+    },
+    {
+      "id": "d13",
+      "description": "identity policy allows kms:Decrypt but the permissions boundary does not",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/deploy-boundary"
+      },
+      "action": "kms:Decrypt",
+      "resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001",
+      "outcome": "deny",
+      "reason": "permission_boundary",
+      "cites": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html 'the permissions boundary must allow the action; the effective permissions are the intersection'"
+    },
+    {
+      "id": "d14",
+      "description": "bucket policy explicit Deny beats the identity-policy Allow",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/ci-legacy-reader"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "deny",
+      "reason": "explicit_deny",
+      "cites": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html 'An explicit deny in any policy overrides any allows'"
+    },
+    {
+      "id": "d15",
+      "description": "role chaining: identity allows AssumeRole and the target trusts the source role",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/ci-bootstrap"
+      },
+      "action": "sts:AssumeRole",
+      "resource": "arn:aws:iam::111111111111:role/admin-breakglass",
+      "outcome": "allow"
+    },
+    {
+      "id": "d16",
+      "description": "trust policy requires MFA; a role session has no MFA",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/ci-bootstrap"
+      },
+      "action": "sts:AssumeRole",
+      "resource": "arn:aws:iam::111111111111:role/locked-role",
+      "outcome": "deny",
+      "reason": "condition_mismatch",
+      "context": {
+        "aws:MultiFactorAuthPresent": "false"
+      },
+      "cites": "aws:MultiFactorAuthPresent is absent or false for role sessions obtained without MFA"
+    },
+    {
+      "id": "d17",
+      "description": "admin role reads the bucket",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/admin-breakglass"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "allow"
+    },
+    {
+      "id": "d18",
+      "description": "kms:Decrypt allowed when called via Secrets Manager",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/secrets-reader"
+      },
+      "action": "kms:Decrypt",
+      "resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000002",
+      "outcome": "allow",
+      "context": {
+        "kms:ViaService": "secretsmanager.us-east-1.amazonaws.com"
+      }
+    },
+    {
+      "id": "d19",
+      "description": "kms:Decrypt denied when the ViaService condition key is absent",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/secrets-reader"
+      },
+      "action": "kms:Decrypt",
+      "resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000002",
+      "outcome": "deny",
+      "reason": "condition_mismatch",
+      "cites": "Condition operators: 'If the key is not present in the request context, the condition evaluates to false' (non-negated operators)"
+    },
+    {
+      "id": "d20",
+      "description": "scoped deploy role reads the bucket",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/deploy-scoped"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "allow"
+    },
+    {
+      "id": "d21",
+      "description": "org-wildcard role reads the bucket through a managed policy",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/deploy-org-wildcard"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "allow"
+    },
+    {
+      "id": "d22",
+      "description": "IRSA-style trust accepts the service-account sub from the cluster issuer",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/oidc.lab.local/kind",
+          "claims": {
+            "sub": "system:serviceaccount:payments:app-sa",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/irsa-app",
+      "outcome": "allow"
+    },
+    {
+      "id": "d23",
+      "description": "irsa-app decrypts with the prod key (key policy delegates to IAM via the root statement)",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/irsa-app"
+      },
+      "action": "kms:Decrypt",
+      "resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001",
+      "outcome": "allow",
+      "cites": "KMS key policies: the 'Enable IAM policies' root statement lets identity policies in the account grant access"
+    },
+    {
+      "id": "d24",
+      "description": "cross-account: bucket policy allows the partner role and its identity policy allows too",
+      "principal": {
+        "role_arn": "arn:aws:iam::222222222222:role/partner-reader"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "allow",
+      "cites": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html cross-account: 'the resource-based policy and the identity-based policy must both allow'"
+    },
+    {
+      "id": "d25",
+      "description": "cross-account: bucket policy allows but the partner role has no identity policy",
+      "principal": {
+        "role_arn": "arn:aws:iam::222222222222:role/partner-noidentity"
+      },
+      "action": "s3:GetObject",
+      "resource": "arn:aws:s3:::acme-customer-data/customers/2026-11.csv",
+      "outcome": "deny",
+      "reason": "no_permission"
+    },
+    {
+      "id": "d26",
+      "description": "source-IP condition on a hosted runner cannot be known offline",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "repo:acme/app:ref:refs/heads/main",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/deploy-ip-locked",
+      "outcome": "unknown",
+      "unknown_context_keys": [
+        "aws:SourceIp"
+      ]
+    },
+    {
+      "id": "d27",
+      "description": "GitHub token presented to a role that trusts a different OIDC provider",
+      "principal": {
+        "web_identity": {
+          "provider_arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+          "claims": {
+            "sub": "system:serviceaccount:payments:app-sa",
+            "aud": "sts.amazonaws.com"
+          }
+        }
+      },
+      "action": "sts:AssumeRoleWithWebIdentity",
+      "resource": "arn:aws:iam::111111111111:role/irsa-app",
+      "outcome": "deny",
+      "reason": "trust_mismatch",
+      "cites": "Principal element: the Federated principal must be the provider that issued the token"
+    },
+    {
+      "id": "d28",
+      "description": "an IAM role cannot AssumeRole into a role that trusts only a federated principal",
+      "principal": {
+        "role_arn": "arn:aws:iam::111111111111:role/ci-bootstrap"
+      },
+      "action": "sts:AssumeRole",
+      "resource": "arn:aws:iam::111111111111:role/deploy-aud-only",
+      "outcome": "deny",
+      "reason": "trust_mismatch"
+    }
+  ],
+  "paths": [
+    {
+      "id": "p01",
+      "description": "Tinder case: any GitHub user assumes the aud-only role from their own repo and reads customer data",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-aud-only",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "verified",
+      "decisions": [
+        "d01",
+        "d09"
+      ]
+    },
+    {
+      "id": "p02",
+      "description": "pull_request_target runs attacker code with the main-branch sub, which the scoped role trusts",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "Workflow:acme/app:.github/workflows/pr-preview.yml",
+        "GitHubOIDCClaim:repo:acme/app:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-scoped",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "CAN_TRIGGER",
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "derived",
+      "decisions": [
+        "d03",
+        "d20"
+      ]
+    },
+    {
+      "id": "p03",
+      "description": "the same token also assumes secrets-reader, whichever role the workflow was written to use",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "Workflow:acme/app:.github/workflows/pr-preview.yml",
+        "GitHubOIDCClaim:repo:acme/app:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/secrets-reader",
+        "Secret:arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf"
+      ],
+      "edges": [
+        "CAN_TRIGGER",
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "derived",
+      "decisions": [
+        "d03",
+        "d11"
+      ]
+    },
+    {
+      "id": "p04",
+      "description": "org-wide StringLike trust reached through an unsafe workflow in another repo of the org",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "Workflow:acme/website:.github/workflows/preview.yml",
+        "GitHubOIDCClaim:repo:acme/website:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-org-wildcard",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "CAN_TRIGGER",
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "derived",
+      "decisions": [
+        "d05",
+        "d21"
+      ]
+    },
+    {
+      "id": "p05",
+      "description": "role chaining from an aud-only bootstrap role into an admin role",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/ci-bootstrap",
+        "IamRole:arn:aws:iam::111111111111:role/admin-breakglass",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "verified",
+      "decisions": [
+        "d01",
+        "d15",
+        "d17"
+      ]
+    },
+    {
+      "id": "p06",
+      "description": "permissions boundary still lets s3:GetObject through",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-boundary",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "verified",
+      "decisions": [
+        "d12"
+      ]
+    },
+    {
+      "id": "p07",
+      "description": "cluster admin via access entry, exec into the pod, use its IRSA role to decrypt with the prod key",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-aud-only",
+        "Cluster:lab",
+        "Pod:payments/app",
+        "ServiceAccount:payments/app-sa",
+        "IamRole:arn:aws:iam::111111111111:role/irsa-app",
+        "KmsKey:arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_EXEC_INTO",
+        "CAN_EXEC_INTO",
+        "RUNS_AS",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "evidence_level": "derived",
+      "decisions": [
+        "d01",
+        "d22",
+        "d23"
+      ]
+    }
+  ],
+  "non_paths": [
+    {
+      "id": "n01",
+      "description": "scoped trust rejects a token from the attacker's repo",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-scoped",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 1,
+      "reason": "condition_mismatch",
+      "decisions": [
+        "d02"
+      ]
+    },
+    {
+      "id": "n02",
+      "description": "environment-scoped role is not reachable from a pull_request_target token",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "Workflow:acme/app:.github/workflows/pr-preview.yml",
+        "GitHubOIDCClaim:repo:acme/app:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-prod-env",
+        "KmsKey:arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001"
+      ],
+      "edges": [
+        "CAN_TRIGGER",
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 2,
+      "reason": "condition_mismatch",
+      "decisions": [
+        "d08"
+      ]
+    },
+    {
+      "id": "n03",
+      "description": "org wildcard does not admit other owners",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-org-wildcard",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 1,
+      "reason": "condition_mismatch",
+      "decisions": [
+        "d06"
+      ]
+    },
+    {
+      "id": "n04",
+      "description": "role is assumable but the SCP blocks the secret read",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-scp-blocked",
+        "Secret:arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 2,
+      "reason": "scp",
+      "decisions": [
+        "d01",
+        "d10"
+      ]
+    },
+    {
+      "id": "n05",
+      "description": "role is assumable but the boundary blocks kms:Decrypt",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-boundary",
+        "KmsKey:arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 2,
+      "reason": "permission_boundary",
+      "decisions": [
+        "d13"
+      ]
+    },
+    {
+      "id": "n06",
+      "description": "role is assumable but the bucket policy explicitly denies it",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/ci-legacy-reader",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 2,
+      "reason": "explicit_deny",
+      "decisions": [
+        "d14"
+      ]
+    },
+    {
+      "id": "n07",
+      "description": "chaining into the MFA-locked role fails the Bool condition",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "GitHubOIDCClaim:repo:attacker/evil:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/ci-bootstrap",
+        "IamRole:arn:aws:iam::111111111111:role/locked-role",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 2,
+      "reason": "condition_mismatch",
+      "decisions": [
+        "d16"
+      ]
+    },
+    {
+      "id": "n08",
+      "description": "a push-triggered workflow cannot be started by an outsider",
+      "nodes": [
+        "AnyGitHubUser:*",
+        "Workflow:acme/app:.github/workflows/deploy.yml",
+        "GitHubOIDCClaim:repo:acme/app:ref:refs/heads/main",
+        "IamRole:arn:aws:iam::111111111111:role/deploy-scoped",
+        "S3Bucket:arn:aws:s3:::acme-customer-data"
+      ],
+      "edges": [
+        "CAN_TRIGGER",
+        "GETS_TOKEN_FOR",
+        "CAN_ASSUME",
+        "CAN_ACCESS"
+      ],
+      "blocked_at": 0,
+      "reason": "no_permission"
+    }
+  ]
+}

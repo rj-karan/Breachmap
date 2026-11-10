@@ -1,0 +1,835 @@
+{
+  "organization": {
+    "id": "o-breachmaplab",
+    "root_id": "r-lab",
+    "org_units": [
+      {
+        "id": "r-lab",
+        "parent_id": null,
+        "scp_ids": [
+          "p-FullAWSAccess"
+        ]
+      },
+      {
+        "id": "ou-lab-workloads",
+        "parent_id": "r-lab",
+        "scp_ids": [
+          "p-FullAWSAccess",
+          "p-secrets-guard"
+        ]
+      }
+    ],
+    "accounts": [
+      {
+        "id": "111111111111",
+        "alias": "breachmap-lab",
+        "parent_ou_id": "ou-lab-workloads"
+      },
+      {
+        "id": "222222222222",
+        "alias": "breachmap-partner",
+        "parent_ou_id": "r-lab"
+      }
+    ],
+    "scps": [
+      {
+        "id": "p-FullAWSAccess",
+        "name": "FullAWSAccess",
+        "document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            }
+          ]
+        }
+      },
+      {
+        "id": "p-secrets-guard",
+        "name": "SecretsOnlyViaReader",
+        "document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DenySecretsUnlessReader",
+              "Effect": "Deny",
+              "Action": "secretsmanager:GetSecretValue",
+              "Resource": "*",
+              "Condition": {
+                "ArnNotEquals": {
+                  "aws:PrincipalArn": "arn:aws:iam::111111111111:role/secrets-reader"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "oidc_providers": [
+    {
+      "arn": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com",
+      "url": "token.actions.githubusercontent.com",
+      "client_ids": [
+        "sts.amazonaws.com"
+      ]
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:oidc-provider/oidc.lab.local/kind",
+      "url": "oidc.lab.local/kind",
+      "client_ids": [
+        "sts.amazonaws.com"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-aud-only",
+      "name": "deploy-aud-only",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "customer-data": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true",
+        "case": "tinder-aud-only"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-scoped",
+      "name": "deploy-scoped",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:acme/app:ref:refs/heads/main"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "customer-data": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-org-wildcard",
+      "name": "deploy-org-wildcard",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              },
+              "StringLike": {
+                "token.actions.githubusercontent.com:sub": "repo:acme/*"
+              }
+            }
+          }
+        ]
+      },
+      "attached_policy_arns": [
+        "arn:aws:iam::111111111111:policy/CustomerDataRead"
+      ],
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-prod-env",
+      "name": "deploy-prod-env",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:acme/app:environment:prod"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "prod": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            },
+            {
+              "Sid": "DecryptProd",
+              "Effect": "Allow",
+              "Action": "kms:Decrypt",
+              "Resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-scp-blocked",
+      "name": "deploy-scp-blocked",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "secrets": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadDbSecret",
+              "Effect": "Allow",
+              "Action": "secretsmanager:GetSecretValue",
+              "Resource": "arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-boundary",
+      "name": "deploy-boundary",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "wide": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            },
+            {
+              "Sid": "DecryptProd",
+              "Effect": "Allow",
+              "Action": "kms:Decrypt",
+              "Resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001"
+            }
+          ]
+        }
+      },
+      "permissions_boundary_arn": "arn:aws:iam::111111111111:policy/S3ReadOnlyBoundary",
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/ci-legacy-reader",
+      "name": "ci-legacy-reader",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "customer-data": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/ci-bootstrap",
+      "name": "ci-bootstrap",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "chain": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Chain",
+              "Effect": "Allow",
+              "Action": "sts:AssumeRole",
+              "Resource": [
+                "arn:aws:iam::111111111111:role/admin-breakglass",
+                "arn:aws:iam::111111111111:role/locked-role"
+              ]
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/admin-breakglass",
+      "name": "admin-breakglass",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "FromBootstrap",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::111111111111:role/ci-bootstrap"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "inline_policies": {
+        "admin": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "All",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/locked-role",
+      "name": "locked-role",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "FromBootstrapWithMfa",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::111111111111:role/ci-bootstrap"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+              "Bool": {
+                "aws:MultiFactorAuthPresent": "true"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "customer-data": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/secrets-reader",
+      "name": "secrets-reader",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:acme/app:ref:refs/heads/main"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "secrets": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadDbSecret",
+              "Effect": "Allow",
+              "Action": "secretsmanager:GetSecretValue",
+              "Resource": "arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf"
+            },
+            {
+              "Sid": "DecryptViaSecretsManager",
+              "Effect": "Allow",
+              "Action": "kms:Decrypt",
+              "Resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000002",
+              "Condition": {
+                "StringEquals": {
+                  "kms:ViaService": "secretsmanager.us-east-1.amazonaws.com"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/irsa-app",
+      "name": "irsa-app",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "KindIrsa",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/oidc.lab.local/kind"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "oidc.lab.local/kind:aud": "sts.amazonaws.com",
+                "oidc.lab.local/kind:sub": "system:serviceaccount:payments:app-sa"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "prod-key": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DecryptProd",
+              "Effect": "Allow",
+              "Action": "kms:Decrypt",
+              "Resource": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/deploy-ip-locked",
+      "name": "deploy-ip-locked",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::111111111111:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:acme/app:ref:refs/heads/main"
+              },
+              "IpAddress": {
+                "aws:SourceIp": "203.0.113.0/24"
+              }
+            }
+          }
+        ]
+      },
+      "inline_policies": {
+        "customer-data": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/breachmap-audit",
+      "name": "breachmap-audit",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "Collector",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::111111111111:root"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+              "StringEquals": {
+                "sts:ExternalId": "breachmap-lab"
+              }
+            }
+          }
+        ]
+      },
+      "attached_policy_arns": [
+        "arn:aws:iam::aws:policy/SecurityAudit"
+      ],
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::222222222222:role/partner-reader",
+      "name": "partner-reader",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::222222222222:root"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "inline_policies": {
+        "customer-data": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadCustomerData",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::acme-customer-data/*"
+            }
+          ]
+        }
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    },
+    {
+      "arn": "arn:aws:iam::222222222222:role/partner-noidentity",
+      "name": "partner-noidentity",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::222222222222:root"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    }
+  ],
+  "managed_policies": [
+    {
+      "arn": "arn:aws:iam::111111111111:policy/CustomerDataRead",
+      "name": "CustomerDataRead",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "ListBucket",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::acme-customer-data"
+          },
+          {
+            "Sid": "ReadObjects",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::acme-customer-data/*"
+          }
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:policy/S3ReadOnlyBoundary",
+      "name": "S3ReadOnlyBoundary",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "S3ReadOnly",
+            "Effect": "Allow",
+            "Action": [
+              "s3:GetObject",
+              "s3:ListBucket"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    }
+  ],
+  "buckets": [
+    {
+      "name": "acme-customer-data",
+      "account_id": "111111111111",
+      "crown_jewel": true,
+      "tags": {
+        "breachmap-lab": "true",
+        "classification": "customer-data"
+      },
+      "bucket_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "PartnerRead",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": [
+                "arn:aws:iam::222222222222:role/partner-reader",
+                "arn:aws:iam::222222222222:role/partner-noidentity"
+              ]
+            },
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::acme-customer-data/*"
+          },
+          {
+            "Sid": "DenyLegacyReaders",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::acme-customer-data/*",
+            "Condition": {
+              "ArnNotLike": {
+                "aws:PrincipalArn": [
+                  "arn:aws:iam::111111111111:role/deploy-*",
+                  "arn:aws:iam::111111111111:role/admin-breakglass",
+                  "arn:aws:iam::111111111111:role/locked-role",
+                  "arn:aws:iam::222222222222:role/partner-*"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "acme-static-site",
+      "account_id": "111111111111",
+      "tags": {
+        "breachmap-lab": "true"
+      }
+    }
+  ],
+  "secrets": [
+    {
+      "arn": "arn:aws:secretsmanager:us-east-1:111111111111:secret:prod/db-credentials-AbCdEf",
+      "name": "prod/db-credentials",
+      "kms_key_arn": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000002",
+      "crown_jewel": true
+    }
+  ],
+  "kms_keys": [
+    {
+      "arn": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000001",
+      "key_id": "11111111-aaaa-4bbb-8ccc-000000000001",
+      "crown_jewel": true,
+      "key_policy": {
+        "Version": "2012-10-17",
+        "Id": "prod-data",
+        "Statement": [
+          {
+            "Sid": "EnableIamPolicies",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::111111111111:root"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:kms:us-east-1:111111111111:key/11111111-aaaa-4bbb-8ccc-000000000002",
+      "key_id": "11111111-aaaa-4bbb-8ccc-000000000002",
+      "key_policy": {
+        "Version": "2012-10-17",
+        "Id": "secrets",
+        "Statement": [
+          {
+            "Sid": "EnableIamPolicies",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::111111111111:root"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+          }
+        ]
+      }
+    }
+  ],
+  "eks_access_entries": [
+    {
+      "cluster": "lab",
+      "principal_arn": "arn:aws:iam::111111111111:role/deploy-aud-only",
+      "access_policy": "AmazonEKSClusterAdminPolicy"
+    }
+  ]
+}

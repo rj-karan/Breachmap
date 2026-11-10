@@ -1,0 +1,44 @@
+{
+  "cluster": "lab",
+  "namespaces": ["default", "kube-system", "payments"],
+  "service_accounts": [
+    {"namespace": "payments", "name": "default"},
+    {
+      "namespace": "payments",
+      "name": "app-sa",
+      "annotations": {"eks.amazonaws.com/role-arn": "arn:aws:iam::111111111111:role/irsa-app"}
+    }
+  ],
+  "pods": [
+    {"namespace": "payments", "name": "app", "service_account": "app-sa"}
+  ],
+  "roles": [
+    {
+      "name": "app-config-reader",
+      "namespace": "payments",
+      "rules": [{"api_groups": [""], "resources": ["configmaps"], "verbs": ["get", "list"]}]
+    },
+    {
+      "name": "pod-exec",
+      "rules": [
+        {"api_groups": [""], "resources": ["pods"], "verbs": ["get", "list"]},
+        {"api_groups": [""], "resources": ["pods/exec"], "verbs": ["create"]}
+      ]
+    }
+  ],
+  "bindings": [
+    {
+      "name": "app-config-reader",
+      "namespace": "payments",
+      "role_ref_kind": "Role",
+      "role_ref_name": "app-config-reader",
+      "subjects": [{"kind": "ServiceAccount", "name": "app-sa", "namespace": "payments"}]
+    },
+    {
+      "name": "deployers-can-exec",
+      "role_ref_kind": "ClusterRole",
+      "role_ref_name": "pod-exec",
+      "subjects": [{"kind": "Group", "name": "breachmap:deployers"}]
+    }
+  ]
+}
