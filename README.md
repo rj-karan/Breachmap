@@ -4,9 +4,10 @@ Attack-path analysis across GitHub Actions, AWS IAM and Kubernetes, with a
 min-cut that picks the cheapest fix and measured accuracy on a lab where the
 right answer is known in advance.
 
-> **Status: bootstrap.** The repo, process, design doc and milestone plan
-> exist. No code runs yet. See [Status](#status) and the
-> [Roadmap](#roadmap) before expecting anything to work.
+> **Status: M1 in progress.** The repo, process, design doc, milestone plan
+> and a tested Python scaffold exist. No analysis runs yet. See
+> [Status](#status) and the [Roadmap](#roadmap) before expecting anything to
+> work.
 
 ## Why
 
@@ -122,7 +123,7 @@ any collector beyond IAM, CloudGoat and pathfinding.cloud as answer keys.
 | Area | State |
 |---|---|
 | Repo, process, design doc, ADRs, milestone plan | done |
-| Python scaffold and hardened CI | not started |
+| Python scaffold and hardened CI | done |
 | Lab answer key and fixtures | not started |
 | Offline AWS policy evaluator | not started |
 | Terraform lab, kind config | not started |
@@ -140,17 +141,19 @@ Honest caveats that will stay in this section:
 
 ## Quickstart
 
-Nothing runs yet. Once the first code PR lands (M1 scaffold) this will be:
+Requires [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 itself).
 
 ```
 git clone https://github.com/rj-karan/Breachmap.git
 cd Breachmap
 uv sync --all-groups
+uv run ruff check . && uv run ruff format --check .
+uv run mypy
 uv run pytest
 ```
 
-No cloud account is needed for tests; everything in `tests/` runs on JSON
-fixtures.
+That is the whole CI, locally. No cloud account is needed; everything in
+`tests/` runs on JSON fixtures. There is no `breachmap` command yet.
 
 ## Roadmap
 
