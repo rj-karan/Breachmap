@@ -1,0 +1,65 @@
+[project]
+name = "breachmap"
+version = "0.1.0"
+description = "Attack-path analysis across GitHub Actions, AWS IAM and Kubernetes with a min-cut fix chooser"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "KARAN RJ" }]
+dependencies = [
+  "pydantic>=2.11",
+]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.14",
+  "mypy>=1.17",
+  "pytest>=8.4",
+  "pytest-cov>=6.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.8"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "RET", "ARG",
+  "PTH", "ERA", "PL", "RUF", "S", "ANN", "D",
+]
+ignore = [
+  "D100", "D104", "D203", "D213",  # no module/package docstrings required; google-ish style
+  "PLR2004",                        # magic numbers are fine in tests and matching tables
+  "S101",                           # assert is how pytest works
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "ANN", "PLR0913", "S"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=breachmap --cov-branch --cov-report=term-missing -q"
+xfail_strict = true
+
+[tool.coverage.run]
+source = ["breachmap"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 90
