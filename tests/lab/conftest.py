@@ -1,10 +1,8 @@
-from pathlib import Path
-
 import pytest
 
 from breachmap.lab import AnswerKey, LabFixture, load_answer_key, load_fixture
 
-LAB = Path(__file__).resolve().parents[2] / "lab"
+from ..conftest import LAB
 
 
 @pytest.fixture(scope="session")
