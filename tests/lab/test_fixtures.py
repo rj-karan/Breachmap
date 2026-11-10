@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from breachmap.lab import LabFixture, load_fixture
 from breachmap.lab.fixtures import AwsFixture, Workflow
 
-from .conftest import LAB
+from ..conftest import LAB
 
 
 def test_every_fixture_directory_loads() -> None:
