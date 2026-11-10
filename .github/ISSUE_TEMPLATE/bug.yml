@@ -1,0 +1,42 @@
+name: Bug
+description: Something is wrong, including a wrong allow/deny or a missed path.
+title: "bug: <short description>"
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Commands, fixture or policy JSON. Redact anything real.
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Accuracy (false positive or false negative)
+        - Crash or error
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: fixture
+    attributes:
+      label: Fixture
+      options:
+        - label: I can turn this into a test fixture

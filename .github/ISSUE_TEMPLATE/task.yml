@@ -1,0 +1,36 @@
+name: Task
+description: A unit of planned work tied to a milestone.
+title: "<area>: <short imperative>"
+labels: ["type:task"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One or two sentences on what this achieves and why.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Checklist of the concrete pieces of work.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of done
+      description: What must be true for this to close (tests, docs, exit test).
+      value: |
+        - [ ] Tests pass locally and in CI
+        - [ ] Docs updated
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and references
+      description: Links to AWS docs, design doc sections, related issues.

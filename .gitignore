@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.auto.tfvars.example
+.terraform.lock.hcl
+crash.log
+
+# Local lab state and credentials
+.env
+.env.*
+lab/.kube/
+*.pem
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
