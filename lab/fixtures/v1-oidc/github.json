@@ -7,37 +7,84 @@
       "workflows": [
         {
           "path": ".github/workflows/pr-preview.yml",
-          "triggers": ["pull_request_target"],
-          "permissions": {"id-token": "write", "contents": "read"},
+          "triggers": [
+            "pull_request_target"
+          ],
+          "permissions": {
+            "id-token": "write",
+            "contents": "read"
+          },
           "checks_out_untrusted_code": true,
           "uses": [
-            {"uses": "actions/checkout@v4", "pinned_to_sha": false},
-            {"uses": "aws-actions/configure-aws-credentials@v4", "pinned_to_sha": false}
+            {
+              "uses": "actions/checkout@v4",
+              "pinned_to_sha": false
+            },
+            {
+              "uses": "aws-actions/configure-aws-credentials@v4",
+              "pinned_to_sha": false
+            }
           ],
           "assumes_role_arn": "arn:aws:iam::111111111111:role/deploy-scoped",
           "zizmor_findings": [
-            {"audit": "dangerous-triggers", "severity": "high"},
-            {"audit": "unpinned-uses", "severity": "medium"}
+            {
+              "audit": "dangerous-triggers",
+              "severity": "high"
+            },
+            {
+              "audit": "excessive-permissions",
+              "severity": "high"
+            },
+            {
+              "audit": "unpinned-uses",
+              "severity": "high"
+            },
+            {
+              "audit": "artipacked",
+              "severity": "medium"
+            }
           ]
         },
         {
           "path": ".github/workflows/deploy.yml",
-          "triggers": ["push"],
-          "permissions": {"id-token": "write", "contents": "read"},
+          "triggers": [
+            "push"
+          ],
+          "permissions": {
+            "id-token": "write",
+            "contents": "read"
+          },
           "uses": [
-            {"uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1", "pinned_to_sha": true},
-            {"uses": "aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df", "pinned_to_sha": true}
+            {
+              "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "pinned_to_sha": true
+            },
+            {
+              "uses": "aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df",
+              "pinned_to_sha": true
+            }
           ],
           "assumes_role_arn": "arn:aws:iam::111111111111:role/deploy-scoped"
         },
         {
           "path": ".github/workflows/release.yml",
-          "triggers": ["push"],
-          "permissions": {"id-token": "write", "contents": "read"},
+          "triggers": [
+            "push"
+          ],
+          "permissions": {
+            "id-token": "write",
+            "contents": "read"
+          },
           "environment": "prod",
           "uses": [
-            {"uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1", "pinned_to_sha": true},
-            {"uses": "aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df", "pinned_to_sha": true}
+            {
+              "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "pinned_to_sha": true
+            },
+            {
+              "uses": "aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df",
+              "pinned_to_sha": true
+            }
           ],
           "assumes_role_arn": "arn:aws:iam::111111111111:role/deploy-prod-env"
         }
@@ -50,17 +97,43 @@
       "workflows": [
         {
           "path": ".github/workflows/preview.yml",
-          "triggers": ["pull_request_target"],
-          "permissions": {"id-token": "write", "contents": "read", "pull-requests": "write"},
+          "triggers": [
+            "pull_request_target"
+          ],
+          "permissions": {
+            "id-token": "write",
+            "contents": "read",
+            "pull-requests": "write"
+          },
           "checks_out_untrusted_code": true,
           "uses": [
-            {"uses": "actions/checkout@v4", "pinned_to_sha": false},
-            {"uses": "aws-actions/configure-aws-credentials@v4", "pinned_to_sha": false}
+            {
+              "uses": "actions/checkout@v4",
+              "pinned_to_sha": false
+            },
+            {
+              "uses": "aws-actions/configure-aws-credentials@v4",
+              "pinned_to_sha": false
+            }
           ],
           "assumes_role_arn": "arn:aws:iam::111111111111:role/deploy-org-wildcard",
           "zizmor_findings": [
-            {"audit": "dangerous-triggers", "severity": "high"},
-            {"audit": "unpinned-uses", "severity": "medium"}
+            {
+              "audit": "dangerous-triggers",
+              "severity": "high"
+            },
+            {
+              "audit": "excessive-permissions",
+              "severity": "high"
+            },
+            {
+              "audit": "unpinned-uses",
+              "severity": "high"
+            },
+            {
+              "audit": "artipacked",
+              "severity": "medium"
+            }
           ]
         }
       ]
@@ -72,10 +145,18 @@
       "workflows": [
         {
           "path": ".github/workflows/ci.yml",
-          "triggers": ["push", "pull_request"],
-          "permissions": {"contents": "read"},
+          "triggers": [
+            "push",
+            "pull_request"
+          ],
+          "permissions": {
+            "contents": "read"
+          },
           "uses": [
-            {"uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1", "pinned_to_sha": true}
+            {
+              "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "pinned_to_sha": true
+            }
           ]
         }
       ]
