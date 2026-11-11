@@ -1,0 +1,20 @@
+# DELIBERATELY VULNERABLE. Lab fixture for Breachmap. Do not copy into a real repository.
+name: Preview
+on:
+  pull_request_target:
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::111111111111:role/deploy-org-wildcard
+          aws-region: us-east-1
+      - run: npm ci && npm run build
