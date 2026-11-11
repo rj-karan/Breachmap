@@ -132,6 +132,14 @@ class RequestContext:
         """Lower-cased key names present in the context."""
         return set(self._values)
 
+    def unknown_keys(self) -> set[str]:
+        """Lower-cased names of keys whose value is not knowable offline."""
+        return set(self._unknown)
+
+    def items(self) -> list[tuple[str, list[str]]]:
+        """(key, values) pairs."""
+        return [(k, list(v)) for k, v in self._values.items()]
+
 
 def _account_of(arn: str) -> str:
     parts = arn.split(":", 5)
