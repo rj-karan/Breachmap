@@ -125,7 +125,7 @@ any collector beyond IAM, CloudGoat and pathfinding.cloud as answer keys.
 | Repo, process, design doc, ADRs, milestone plan | done |
 | Python scaffold and hardened CI | done |
 | Lab answer key and fixtures | done, `v1-oidc`: 16 roles, 28 decisions, 7 paths, 8 non-paths |
-| Offline AWS policy evaluator | not started |
+| Offline AWS policy evaluator | done for the five v1 actions; all 28 answer-key decisions reproduce |
 | Terraform lab, kind config | not started |
 | Collectors, graph, oracles, paths, min-cut, fixes, detections | not started |
 

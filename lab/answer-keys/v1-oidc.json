@@ -16,7 +16,7 @@
       "action": "sts:AssumeRoleWithWebIdentity",
       "resource": "arn:aws:iam::111111111111:role/deploy-aud-only",
       "outcome": "allow",
-      "cites": "GitHub docs: 'the aud claim is sts.amazonaws.com by default for every token', so a condition on aud alone does not restrict which repository may assume the role"
+      "cites": "GitHub OIDC reference: aud is chosen by the caller (configure-aws-credentials requests sts.amazonaws.com; the `audience` input can request anything), so a condition on aud alone does not restrict which repository may assume the role"
     },
     {
       "id": "d02",
