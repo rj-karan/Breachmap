@@ -153,7 +153,18 @@ uv run pytest
 ```
 
 That is the whole CI, locally. No cloud account is needed; everything in
-`tests/` runs on JSON fixtures. There is no `breachmap` command yet.
+`tests/` runs on JSON fixtures. Two commands exist so far, both offline:
+
+```
+uv run breachmap check  --fixture lab/fixtures/v1-oidc --answer-key lab/answer-keys/v1-oidc.json
+uv run breachmap mutate --fixture lab/fixtures/v1-oidc --answer-key lab/answer-keys/v1-oidc.json \
+                        --mutations lab/mutations/v1-oidc.json
+```
+
+The first reproduces every decision in the answer key with the evaluator and
+prints the reason for each; the second changes one fact at a time and checks
+that exactly the declared decisions flip. Numbers live in
+[docs/accuracy.md](docs/accuracy.md).
 
 ## Roadmap
 
