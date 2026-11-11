@@ -67,3 +67,22 @@ jobs:
       - run: ./actionlint -color
       - name: zizmor (pedantic)
         run: uvx "zizmor==${ZIZMOR_VERSION}" --pedantic --min-severity low .github/workflows
+
+  lab-terraform:
+    name: Lab Terraform
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync --all-groups
+      - name: Plan the AWS lab offline and compare it with the fixture
+        run: make lab-plan

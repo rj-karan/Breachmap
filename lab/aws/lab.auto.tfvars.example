@@ -1,0 +1,5 @@
+# Copy to lab.auto.tfvars (git-ignored) and fill in.
+account_id         = "111111111111"
+budget_alert_email = "you@example.com"
+github_org         = "acme"
+bucket_suffix      = "-yourhandle"

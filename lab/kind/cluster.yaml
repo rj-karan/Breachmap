@@ -1,0 +1,8 @@
+# kind cluster for the Breachmap lab. RBAC and SubjectAccessReview behave as
+# on EKS; IRSA does not exist here, so the role-arn annotation below is only
+# data for the collector and every edge through it is Derived (ADR-0002).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: breachmap-lab
+nodes:
+  - role: control-plane

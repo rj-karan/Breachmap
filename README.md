@@ -126,7 +126,7 @@ any collector beyond IAM, CloudGoat and pathfinding.cloud as answer keys.
 | Python scaffold and hardened CI | done |
 | Lab answer key and fixtures | done, `v1-oidc`: 16 roles, 28 decisions, 7 paths, 8 non-paths |
 | Offline AWS policy evaluator | done for the five v1 actions; all 28 answer-key decisions reproduce |
-| Terraform lab, kind config | not started |
+| Terraform lab, kind config | done; offline `make lab-plan` in CI, `make kind-up` tested locally |
 | Collectors, graph, oracles, paths, min-cut, fixes, detections | not started |
 
 Honest caveats that will stay in this section:
