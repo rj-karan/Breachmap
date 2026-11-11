@@ -1,0 +1,554 @@
+{
+  "fixture": "v1-oidc",
+  "mutations": [
+    {
+      "id": "m01",
+      "description": "drop the sub condition from deploy-scoped: any repo and any event can assume it",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-scoped].trust_policy.Statement[0].Condition",
+          "value": {
+            "StringEquals": {
+              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d02",
+          "outcome": "allow"
+        },
+        {
+          "decision": "d04",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m02",
+      "description": "widen deploy-scoped from StringEquals to StringLike repo:acme/*",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-scoped].trust_policy.Statement[0].Condition",
+          "value": {
+            "StringEquals": {
+              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+            },
+            "StringLike": {
+              "token.actions.githubusercontent.com:sub": "repo:acme/*"
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d04",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m03",
+      "description": "detach the secrets-guard SCP from the workloads OU",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "organization.org_units[id=ou-lab-workloads].scp_ids",
+          "value": [
+            "p-FullAWSAccess"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d10",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m04",
+      "description": "remove deploy-boundary's permissions boundary",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "roles[name=deploy-boundary].permissions_boundary_arn"
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d13",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m05",
+      "description": "remove the bucket policy's explicit deny for legacy readers",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "buckets[name=acme-customer-data].bucket_policy.Statement[Sid=DenyLegacyReaders]"
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d14",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m06",
+      "description": "drop the MFA condition from locked-role's trust policy",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "roles[name=locked-role].trust_policy.Statement[0].Condition"
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d16",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m07",
+      "description": "drop the kms:ViaService condition from secrets-reader",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "roles[name=secrets-reader].inline_policies.secrets.Statement[Sid=DecryptViaSecretsManager].Condition"
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d19",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m08",
+      "description": "give partner-noidentity an identity policy for the bucket",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=partner-noidentity].inline_policies",
+          "value": {
+            "customer-data": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Read",
+                  "Effect": "Allow",
+                  "Action": "s3:GetObject",
+                  "Resource": "arn:aws:s3:::acme-customer-data/*"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d25",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m09",
+      "description": "remove the PartnerRead statement from the bucket policy",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "buckets[name=acme-customer-data].bucket_policy.Statement[Sid=PartnerRead]"
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d24",
+          "outcome": "deny",
+          "reason": "resource_policy"
+        },
+        {
+          "decision": "d25",
+          "outcome": "deny",
+          "reason": "resource_policy"
+        }
+      ]
+    },
+    {
+      "id": "m10",
+      "description": "widen deploy-org-wildcard to repo:*",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-org-wildcard].trust_policy.Statement[0].Condition.StringLike",
+          "value": {
+            "token.actions.githubusercontent.com:sub": "repo:*"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d06",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m11",
+      "description": "retarget deploy-prod-env's sub from the environment to the main branch",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-prod-env].trust_policy.Statement[0].Condition.StringEquals",
+          "value": {
+            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+            "token.actions.githubusercontent.com:sub": "repo:acme/app:ref:refs/heads/main"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d07",
+          "outcome": "deny",
+          "reason": "condition_mismatch"
+        },
+        {
+          "decision": "d08",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m12",
+      "description": "remove ci-bootstrap's sts:AssumeRole permission: no change, admin-breakglass's trust names the role directly so no identity permission is needed within the account",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=ci-bootstrap].inline_policies",
+          "value": {}
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "m13",
+      "description": "admin-breakglass trusts the account root instead of ci-bootstrap: no change, identity still allows",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=admin-breakglass].trust_policy.Statement[0].Principal",
+          "value": {
+            "AWS": "arn:aws:iam::111111111111:root"
+          }
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "m14",
+      "description": "remove deploy-aud-only's bucket permission",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-aud-only].inline_policies",
+          "value": {}
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d09",
+          "outcome": "deny",
+          "reason": "no_permission"
+        }
+      ]
+    },
+    {
+      "id": "m15",
+      "description": "add an explicit deny on the bucket to deploy-scoped",
+      "edits": [
+        {
+          "op": "append",
+          "file": "aws",
+          "path": "roles[name=deploy-scoped].inline_policies.customer-data.Statement",
+          "value": {
+            "Sid": "Block",
+            "Effect": "Deny",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::acme-customer-data/*"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d20",
+          "outcome": "deny",
+          "reason": "explicit_deny"
+        }
+      ]
+    },
+    {
+      "id": "m16",
+      "description": "detach FullAWSAccess from the workloads OU: every lab-account principal is denied by SCP, except where an explicit deny already decided first",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "organization.org_units[id=ou-lab-workloads].scp_ids",
+          "value": [
+            "p-secrets-guard"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d09",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d11",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d12",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d13",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d15",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d16",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d17",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d18",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d19",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d20",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d21",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d23",
+          "outcome": "deny",
+          "reason": "scp"
+        },
+        {
+          "decision": "d28",
+          "outcome": "deny",
+          "reason": "scp"
+        }
+      ]
+    },
+    {
+      "id": "m17",
+      "description": "point irsa-app's trust at a different service account",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=irsa-app].trust_policy.Statement[0].Condition.StringEquals",
+          "value": {
+            "oidc.lab.local/kind:aud": "sts.amazonaws.com",
+            "oidc.lab.local/kind:sub": "system:serviceaccount:payments:other-sa"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d22",
+          "outcome": "deny",
+          "reason": "condition_mismatch"
+        }
+      ]
+    },
+    {
+      "id": "m18",
+      "description": "drop the source-IP condition from deploy-ip-locked: the unknown becomes a definite allow",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "roles[name=deploy-ip-locked].trust_policy.Statement[0].Condition.IpAddress"
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d26",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m19",
+      "description": "deploy-aud-only trusts the kind issuer instead of GitHub",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-aud-only].trust_policy.Statement[0].Principal",
+          "value": {
+            "Federated": "arn:aws:iam::111111111111:oidc-provider/oidc.lab.local/kind"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d01",
+          "outcome": "deny",
+          "reason": "trust_mismatch"
+        }
+      ]
+    },
+    {
+      "id": "m20",
+      "description": "fix the Tinder case: scope deploy-aud-only to repo:acme/app main",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-aud-only].trust_policy.Statement[0].Condition",
+          "value": {
+            "StringEquals": {
+              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+              "token.actions.githubusercontent.com:sub": "repo:acme/app:ref:refs/heads/main"
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d01",
+          "outcome": "deny",
+          "reason": "condition_mismatch"
+        }
+      ]
+    },
+    {
+      "id": "m21",
+      "description": "let the S3 boundary also allow kms:Decrypt",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "managed_policies[name=S3ReadOnlyBoundary].document.Statement[0].Action",
+          "value": [
+            "s3:GetObject",
+            "s3:ListBucket",
+            "kms:Decrypt"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d13",
+          "outcome": "allow"
+        }
+      ]
+    },
+    {
+      "id": "m22",
+      "description": "the SCP exempts a different role: secrets-reader is now blocked too",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "organization.scps[id=p-secrets-guard].document.Statement[0].Condition",
+          "value": {
+            "ArnNotEquals": {
+              "aws:PrincipalArn": "arn:aws:iam::111111111111:role/other"
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "decision": "d11",
+          "outcome": "deny",
+          "reason": "scp"
+        }
+      ]
+    },
+    {
+      "id": "m23",
+      "description": "delete the GitHub OIDC provider record: fixture still valid, trust ARNs unchanged, no change",
+      "edits": [
+        {
+          "op": "delete",
+          "file": "aws",
+          "path": "oidc_providers[url=token.actions.githubusercontent.com]"
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "m24",
+      "description": "change StringEquals to StringEqualsIgnoreCase on deploy-scoped: same results for these claims",
+      "edits": [
+        {
+          "op": "set",
+          "file": "aws",
+          "path": "roles[name=deploy-scoped].trust_policy.Statement[0].Condition",
+          "value": {
+            "StringEqualsIgnoreCase": {
+              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+              "token.actions.githubusercontent.com:sub": "repo:acme/app:ref:refs/heads/main"
+            }
+          }
+        }
+      ],
+      "expected": []
+    }
+  ]
+}
