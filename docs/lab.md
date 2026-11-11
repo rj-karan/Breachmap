@@ -13,8 +13,8 @@ forms that must always agree:
    and what must not. Schema in `src/breachmap/lab/answer_key.py`.
 
 Every test in `tests/` runs on these files. No cloud account is needed. The
-Terraform under `lab/aws/` (M1, issue #7) builds the same resources for real
-so the oracle cross-checks in M3 have something to talk to.
+Terraform under `lab/aws/`, the kind manifests and the lab workflows build the
+same lab for real; see [lab/README.md](../lab/README.md).
 
 ## Answer-key contents
 
