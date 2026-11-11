@@ -23,12 +23,18 @@
       {
         "id": "111111111111",
         "alias": "breachmap-lab",
-        "parent_ou_id": "ou-lab-workloads"
+        "parent_ou_id": "ou-lab-workloads",
+        "scp_ids": [
+          "p-FullAWSAccess"
+        ]
       },
       {
         "id": "222222222222",
         "alias": "breachmap-partner",
-        "parent_ou_id": "r-lab"
+        "parent_ou_id": "r-lab",
+        "scp_ids": [
+          "p-FullAWSAccess"
+        ]
       }
     ],
     "scps": [
