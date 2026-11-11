@@ -18,6 +18,7 @@ build/
 *.tfstate.*
 *.tfvars
 !*.auto.tfvars.example
+!lab/aws/offline.tfvars
 .terraform.lock.hcl
 crash.log
 
@@ -32,3 +33,5 @@ lab/.kube/
 .vscode/
 *.swp
 .DS_Store
+lab/aws/plan.json
+lab/aws/*.tfplan
