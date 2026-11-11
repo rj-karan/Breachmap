@@ -489,9 +489,11 @@ quietly guess AWS behavior.
 
 ## Sources
 
-- [AWS IAM policy evaluation logic](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html)
-- [IAM policy simulator guide, including its limitations](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_testing-policies.html)
-- [IAM Access Analyzer findings](https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html)
-- [Tinder: GitHub Actions and AWS OIDC misconfigurations](https://medium.com/tinder/identifying-and-mitigating-github-actions-oidc-misconfigurations-in-aws-b8bfb7e0d3e7)
+Links as they appear in the original PDF.
+
+- [AWS IAM policy evaluation logic](https://docs.aws.amazon.com/IAM/latest/UserGuide/AccessPolicyLanguage_EvaluationLogic.html)
+- [IAM policy simulator guide, including its limitations](https://docs.aws.amazon.com/IAM/latest/UsingPolicySimulatorGuide/iam-policy-simulator-guide.html)
+- [IAM Access Analyzer findings](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-findings.html)
+- [Tinder: GitHub Actions and AWS OIDC misconfigurations](https://lifeattinder.com/blog/identifying-vulnerabilities-in-github-actions-aws-oidc-configurations)
 - [Cartography (CNCF sandbox)](https://github.com/cartography-cncf/cartography)
 - [CloudGoat by Rhino Security Labs](https://github.com/RhinoSecurityLabs/cloudgoat)
