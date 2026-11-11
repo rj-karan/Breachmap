@@ -38,6 +38,27 @@ These mutations act on the evaluator's decisions. M6 extends the set to
 whole paths once the path engine exists, and generates mutations
 automatically from the fixture.
 
+## Adversarial corpus
+
+```
+uv run pytest tests/iam/test_adversarial.py
+```
+
+| Corpus | Cases | Passing |
+|---|---|---|
+| `tests/iam/adversarial/` | 18 | 18 |
+
+Each case is one documented trap (NotAction, NotResource, over-broad ARNs,
+NotIpAddress with an unknowable IP, PrincipalOrgID, boundaries, vacuous
+ForAllValues, a missing SCP allow at a middle OU).
+
+## Lab sources agree with the fixture
+
+`make lab-plan` compares the offline Terraform plan with the fixture: all
+14 lab-account trust policies match exactly, and 7 of 12 inline policies;
+the other 5 reference ARNs that exist only after apply. The kind manifests
+and the lab workflows are compared in the same test file.
+
 ## Not yet measured
 
 | Metric | Milestone | Status |

@@ -4,10 +4,10 @@ Attack-path analysis across GitHub Actions, AWS IAM and Kubernetes, with a
 min-cut that picks the cheapest fix and measured accuracy on a lab where the
 right answer is known in advance.
 
-> **Status: M1 in progress.** The repo, process, design doc, milestone plan
-> and a tested Python scaffold exist. No analysis runs yet. See
-> [Status](#status) and the [Roadmap](#roadmap) before expecting anything to
-> work.
+> **Status: M1 done, M2 next.** The offline IAM evaluator reproduces every
+> decision in the lab's answer key, and the lab builds from Terraform and kind.
+> There are no collectors, no graph and no path finding yet. See
+> [Status](#status) and the [Roadmap](#roadmap).
 
 ## Why
 
@@ -127,7 +127,8 @@ any collector beyond IAM, CloudGoat and pathfinding.cloud as answer keys.
 | Lab answer key and fixtures | done, `v1-oidc`: 16 roles, 28 decisions, 7 paths, 8 non-paths |
 | Offline AWS policy evaluator | done for the five v1 actions; all 28 answer-key decisions reproduce |
 | Terraform lab, kind config | done; offline `make lab-plan` in CI, `make kind-up` tested locally |
-| Collectors, graph, oracles, paths, min-cut, fixes, detections | not started |
+| Adversarial IAM corpus and mutation tests | done: 18 cases, 24 mutations, all passing |
+| Collectors, graph, oracles, paths, min-cut, fixes, detections | not started (M2–M6) |
 
 Honest caveats that will stay in this section:
 
@@ -137,6 +138,9 @@ Honest caveats that will stay in this section:
 - v1 is **one path family** (GitHub OIDC → IAM role → S3/Secret/KMS, optional
   Kubernetes service account) done to the accuracy targets. Lambda, EC2,
   security groups, Falco, Azure/GCP and log ingestion are out of scope.
+- The evaluator's answers are derived from the AWS documentation and match
+  the hand-written answer key. They have **not yet been checked against AWS's
+  own policy simulator**; that cross-check is M3.
 - Accuracy numbers appear only after they are measured.
 
 ## Quickstart
@@ -170,7 +174,7 @@ that exactly the declared decisions flip. Numbers live in
 
 | Milestone | Builds | Exit test | Due |
 |---|---|---|---|
-| [M1](docs/milestones/M1.md) Lab + answer key + evaluator | Seeded fixtures, answer key, offline IAM evaluator, Terraform lab | `pytest tests/lab tests/iam` green; `terraform plan` succeeds | 2026-11-24 |
+| [M1](docs/milestones/M1.md) Lab + answer key + evaluator (**done**) | Seeded fixtures, answer key, offline IAM evaluator, Terraform lab | `pytest tests/lab tests/iam` green; `terraform plan` succeeds | 2026-11-24 |
 | [M2](docs/milestones/M2.md) Collectors + graph | GitHub, AWS, kind collectors; edges with evidence | all answer-key edges collected, none without evidence | 2026-12-08 |
 | [M3](docs/milestones/M3.md) Accuracy engine | Simulator, Access Analyzer, SubjectAccessReview oracles | ≥ 99% edge agreement | 2026-12-29 |
 | [M4](docs/milestones/M4.md) Paths + min-cut | Path search, cost model, cut chooser | recall and precision ≥ 95% | 2027-01-19 |
