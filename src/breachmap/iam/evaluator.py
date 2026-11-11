@@ -118,9 +118,9 @@ class _Evaluation:
         role = env.role(self.principal.arn) if self.principal.arn else None
         self.resource_policy = env.resource_policy_for(request.resource)
         owner = env.resource_account(request.resource)
-        self.same_account = (
-            self.principal.account_id is not None and self.principal.account_id == owner
-        )
+        # An unknown owner (a bare "*" or an unlisted resource) is taken to be the caller's
+        # own account; cross-account access needs a known resource policy to be evaluable.
+        self.same_account = owner is None or owner == self.principal.account_id
 
         self.identity = self._set(
             [(p, "identity", None) for p in (role.identity_policies if role else [])]
