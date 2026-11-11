@@ -1,0 +1,38 @@
+{
+  "id": "a03",
+  "description": "NotAction with Deny denies everything outside the list, even with an admin allow",
+  "cites": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html 'An explicit deny in any policy overrides any allows'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "*",
+          "Resource": "*"
+        },
+        {
+          "Effect": "Deny",
+          "NotAction": [
+            "iam:*",
+            "sts:*"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "deny",
+    "reason": "explicit_deny"
+  }
+}

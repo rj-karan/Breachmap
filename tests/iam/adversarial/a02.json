@@ -1,0 +1,30 @@
+{
+  "id": "a02",
+  "description": "NotAction with Allow does not grant the listed service",
+  "cites": "same as a01",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "NotAction": "iam:*",
+          "Resource": "*"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "iam:CreateAccessKey",
+  "resource": "arn:aws:iam::111111111111:user/bob",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "deny",
+    "reason": "no_permission"
+  }
+}

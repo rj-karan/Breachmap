@@ -1,0 +1,30 @@
+{
+  "id": "a18",
+  "description": "action names are case-insensitive",
+  "cites": "Action element: 'The prefix and the action name are case insensitive.'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "S3:getobject",
+          "Resource": "*"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "allow",
+    "reason": null
+  }
+}
