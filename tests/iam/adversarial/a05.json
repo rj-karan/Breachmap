@@ -1,0 +1,30 @@
+{
+  "id": "a05",
+  "description": "bucket ARN without /* does not cover objects",
+  "cites": "Resource element: 'arn:aws:s3:::amzn-s3-demo-bucket/*' refers to all items within a bucket; the bucket ARN alone is the bucket",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::data"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "deny",
+    "reason": "no_permission"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "a16",
+  "description": "ForAllValues on a missing key is vacuously true and grants access",
+  "cites": "ForAllValues: 'It also returns true if there are no context keys in the request.'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "s3:GetObject",
+          "Resource": "*",
+          "Condition": {
+            "ForAllValues:StringEquals": {
+              "aws:TagKeys": [
+                "team"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "allow",
+    "reason": null
+  }
+}

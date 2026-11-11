@@ -1,0 +1,37 @@
+{
+  "id": "a15",
+  "description": "StringEquals with * is a literal asterisk",
+  "cites": "StringEquals: 'Exact matching, case sensitive'; wildcards are a StringLike feature",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "s3:GetObject",
+          "Resource": "*",
+          "Condition": {
+            "StringEquals": {
+              "aws:PrincipalTag/team": "*"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {
+    "aws:PrincipalTag/team": "blue"
+  },
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "deny",
+    "reason": "condition_mismatch"
+  }
+}

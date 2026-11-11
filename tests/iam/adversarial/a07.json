@@ -1,0 +1,47 @@
+{
+  "id": "a07",
+  "description": "trailing * in the region segment crosses colon boundaries",
+  "cites": "Resource element: 'If the * wildcard is the last character of a resource ARN segment, it can expand to match beyond the colon boundaries.'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "kms:Decrypt",
+          "Resource": "arn:aws:kms:us-*"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": {
+    "kind": "kms",
+    "arn": "arn:aws:kms:us-east-1:111111111111:key/abc",
+    "account_id": "111111111111",
+    "document": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": {
+            "AWS": "arn:aws:iam::111111111111:root"
+          },
+          "Action": "kms:*",
+          "Resource": "*"
+        }
+      ]
+    }
+  },
+  "scp_levels": [],
+  "org_id": null,
+  "action": "kms:Decrypt",
+  "resource": "arn:aws:kms:us-east-1:111111111111:key/abc",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "allow",
+    "reason": null
+  }
+}

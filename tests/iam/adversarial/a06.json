@@ -1,0 +1,30 @@
+{
+  "id": "a06",
+  "description": "prod-* matches more buckets than intended",
+  "cites": "Resource element: '*' matches 'Any combination of characters'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::prod-*/*"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::prod-backup-archive/dump.sql",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "allow",
+    "reason": null
+  }
+}

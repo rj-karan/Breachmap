@@ -1,0 +1,28 @@
+{
+  "id": "a13",
+  "description": "boundary allows but no identity policy does",
+  "cites": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html 'the resulting permissions are the intersection of the two categories'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [],
+  "boundary": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "s3:*",
+        "Resource": "*"
+      }
+    ]
+  },
+  "resource_policy": null,
+  "scp_levels": [],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "deny",
+    "reason": "no_permission"
+  }
+}

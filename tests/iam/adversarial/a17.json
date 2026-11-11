@@ -1,0 +1,67 @@
+{
+  "id": "a17",
+  "description": "SCP allow missing at the middle OU denies even with an identity allow",
+  "cites": "SCP evaluation: 'there must be an explicit Allow statement at every level from the root through each OU in the direct path to the account'",
+  "principal_role_arn": "arn:aws:iam::111111111111:role/app",
+  "identity": [
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "s3:GetObject",
+          "Resource": "*"
+        }
+      ]
+    }
+  ],
+  "boundary": null,
+  "resource_policy": null,
+  "scp_levels": [
+    [
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "ec2:*",
+            "Resource": "*"
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          }
+        ]
+      }
+    ]
+  ],
+  "org_id": null,
+  "action": "s3:GetObject",
+  "resource": "arn:aws:s3:::data/file.csv",
+  "context": {},
+  "unknown_context_keys": [],
+  "expected": {
+    "outcome": "deny",
+    "reason": "scp"
+  }
+}
